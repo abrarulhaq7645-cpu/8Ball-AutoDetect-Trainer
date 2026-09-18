@@ -1,0 +1,51 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '8Ball_AutoDetect_Trainer_v2_fixed.zip'
+      - '.github/workflows/build-apk.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract project
+        run: |
+          rm -rf project
+          mkdir project
+          unzip -q 8Ball_AutoDetect_Trainer_v2_fixed.zip -d project
+          ls -la project
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK
+        run: |
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build APK
+        working-directory: project
+        run: gradle :app:assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: 8Ball-AutoDetect-Trainer-APK
+          path: project/app/build/outputs/apk/debug/app-debug.apk
